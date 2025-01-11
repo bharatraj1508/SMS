@@ -30,7 +30,7 @@ export default function RootLayout({
             <Navbar />
           </div>
         </header>
-        <div>{children}</div>
+        <div className="p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
