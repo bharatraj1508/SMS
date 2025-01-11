@@ -34,7 +34,7 @@ export function StudentChart() {
   }, []);
 
   return (
-    <ChartContainer config={chartConfig} className="w-full h-full mx-auto">
+    <ChartContainer config={chartConfig} className="w-full h-full">
       <PieChart>
         <ChartTooltip
           cursor={false}

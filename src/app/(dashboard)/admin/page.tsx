@@ -1,5 +1,6 @@
 import AdminUserCard from "@/components/AdminUserCard";
 import { AttendanceChart } from "@/components/AttendanceChart";
+import { FinanceChart } from "@/components/FinanceChart";
 import { StudentChart } from "@/components/StudentChart";
 
 export default function AdminPage() {
@@ -16,7 +17,7 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6 ">
-            <div className="w-full lg:w-1/3 h-[350px] flex flex-col bg-neutral-50 border border-gray-300 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
+            <div className="w-full lg:w-1/3 flex flex-col bg-neutral-50 border border-gray-300 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
               {/* Student Charts */}
               <StudentChart />
               <div className="flex items-center justify-center pb-4">
@@ -35,12 +36,15 @@ export default function AdminPage() {
               </div>
             </div>
             {/* Attendance Chart */}
-            <div className="w-full lg:w-2/3 h-[350px] bg-neutral-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
+            <div className="w-full lg:w-2/3 bg-neutral-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
               <AttendanceChart />
             </div>
           </div>
 
           {/* Finance Chart */}
+          <div className="w-full bg-neutral-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
+            <FinanceChart />
+          </div>
         </div>
         <div className="lg:w-1/3 w-full">
           {/* Calendar Events */}
