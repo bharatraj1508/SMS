@@ -1,4 +1,5 @@
 import AdminUserCard from "@/components/AdminUserCard";
+import { AttendanceChart } from "@/components/AttendanceChart";
 import { StudentChart } from "@/components/StudentChart";
 
 export default function AdminPage() {
@@ -34,7 +35,9 @@ export default function AdminPage() {
               </div>
             </div>
             {/* Attendance Chart */}
-            <div className="w-full lg:w-2/3">Attendance chart</div>
+            <div className="w-full lg:w-2/3 h-[350px] bg-neutral-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-500">
+              <AttendanceChart />
+            </div>
           </div>
 
           {/* Finance Chart */}
