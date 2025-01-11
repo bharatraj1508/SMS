@@ -8,7 +8,12 @@ export default function AdminUserCard({
   bgColor: string;
 }) {
   return (
-    <div className={cn("rounded-2xl p-4 flex-1 min-w-[130px]", bgColor)}>
+    <div
+      className={cn(
+        "rounded-2xl p-4 flex-1 min-w-[130px] hover:shadow-2xl hover:scale-105 transition-all duration-500",
+        bgColor
+      )}
+    >
       <div className="flex justify-between items-center">
         <span className="text-[10px] bg-white px-2 py-1 rounded-full font-semibold text-neutral-800">
           2024/25
