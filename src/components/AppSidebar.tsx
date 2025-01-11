@@ -15,7 +15,7 @@ import { role } from "@/lib/data";
 
 export default function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar variant="inset" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           {menuItems.map((group) => (
@@ -29,7 +29,10 @@ export default function AppSidebar() {
                     if (item.visible.includes(role)) {
                       return (
                         <SidebarMenuItem className="my-1.5" key={item.label}>
-                          <SidebarMenuButton asChild>
+                          <SidebarMenuButton
+                            asChild
+                            className="hover:bg-red-100 transition-all duration-300"
+                          >
                             <Link href={item.href}>
                               <Image
                                 src={item.icon}
