@@ -1,9 +1,15 @@
+"use client";
+
 import AdminUserCard from "@/components/AdminUserCard";
+import Announcements from "@/components/Announcement";
 import { AttendanceChart } from "@/components/AttendanceChart";
+import EventCalendar from "@/components/EventCalendar";
 import { FinanceChart } from "@/components/FinanceChart";
 import { StudentChart } from "@/components/StudentChart";
+import { useState } from "react";
 
 export default function AdminPage() {
+  const [date, setDate] = useState<Date | undefined>(new Date());
   return (
     <>
       <div className="flex flex-col md:flex-row gap-2">
@@ -46,9 +52,15 @@ export default function AdminPage() {
             <FinanceChart />
           </div>
         </div>
-        <div className="lg:w-1/3 w-full">
+        <div className="lg:w-1/3 w-full flex flex-col gap-4">
           {/* Calendar Events */}
+
+          <EventCalendar />
+
           {/* Announcements */}
+          <div>
+            <Announcements />
+          </div>
         </div>
       </div>
     </>
