@@ -6,10 +6,8 @@ import { AttendanceChart } from "@/components/AttendanceChart";
 import EventCalendar from "@/components/EventCalendar";
 import { FinanceChart } from "@/components/FinanceChart";
 import { StudentChart } from "@/components/StudentChart";
-import { useState } from "react";
 
 export default function AdminPage() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   return (
     <>
       <div className="flex flex-col md:flex-row gap-2">
