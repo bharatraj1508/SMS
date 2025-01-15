@@ -34,50 +34,66 @@ export function StudentChart() {
   }, []);
 
   return (
-    <ChartContainer config={chartConfig} className="w-full h-full">
-      <PieChart>
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent hideLabel />}
-        />
-        <Pie
-          data={chartData}
-          dataKey="count"
-          nameKey="gender"
-          innerRadius={60}
-          strokeWidth={5}
-        >
-          <Label
-            content={({ viewBox }) => {
-              if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                return (
-                  <text
-                    x={viewBox.cx}
-                    y={viewBox.cy}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    <tspan
+    <div className="flex flex-col w-full h-full">
+      <ChartContainer config={chartConfig} className="w-full h-full">
+        <PieChart>
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+          <Pie
+            data={chartData}
+            dataKey="count"
+            nameKey="gender"
+            innerRadius={60}
+            strokeWidth={5}
+          >
+            <Label
+              content={({ viewBox }) => {
+                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                  return (
+                    <text
                       x={viewBox.cx}
                       y={viewBox.cy}
-                      className="fill-foreground text-2xl font-bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
                     >
-                      {totalVisitors.toLocaleString()}
-                    </tspan>
-                    <tspan
-                      x={viewBox.cx}
-                      y={(viewBox.cy || 0) + 24}
-                      className="fill-muted-foreground"
-                    >
-                      Students
-                    </tspan>
-                  </text>
-                );
-              }
-            }}
-          />
-        </Pie>
-      </PieChart>
-    </ChartContainer>
+                      <tspan
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        className="fill-foreground text-2xl font-bold"
+                      >
+                        {totalVisitors.toLocaleString()}
+                      </tspan>
+                      <tspan
+                        x={viewBox.cx}
+                        y={(viewBox.cy || 0) + 24}
+                        className="fill-muted-foreground"
+                      >
+                        Students
+                      </tspan>
+                    </text>
+                  );
+                }
+              }}
+            />
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      <div className="flex items-center justify-center pb-4">
+        <div className="flex justify-center gap-16">
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-5 h-5 bg-chart-1 rounded-full" />
+            <h1 className="font-bold">875</h1>
+            <h2 className="text-xs text-neutral-800">Boys (55%)</h2>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-5 h-5 bg-chart-2 rounded-full" />
+            <h1 className="font-bold">620</h1>
+            <h2 className="text-xs text-neutral-800">Girls (45%)</h2>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
