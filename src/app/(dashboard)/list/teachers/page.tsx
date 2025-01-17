@@ -93,7 +93,29 @@ export default function TeacherListPage() {
       <TableCell>
         <div className="flex items-center justify-evenly gap-2">
           <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
-          {role === "admin" && <FormModal type="delete" table="teacher" />}
+          {role === "admin" && (
+            <>
+              <FormModal
+                type="update"
+                table="teacher"
+                data={{
+                  id: 1,
+                  username: "deanguerrero",
+                  email: "deanguerrero@gmail.com",
+                  password: "password",
+                  firstName: "Dean",
+                  lastName: "Guerrero",
+                  phone: "+1 234 567 89",
+                  address: "1234 Main St, Anytown, USA",
+                  bloodType: "A+",
+                  dateOfBirth: "2000-01-01",
+                  sex: "male",
+                  img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                }}
+              />
+              <FormModal type="delete" table="teacher" />
+            </>
+          )}
         </div>
       </TableCell>
     </TableRow>
@@ -128,7 +150,11 @@ export default function TeacherListPage() {
               />
             </button>
 
-            {role === "admin" && <FormModal type="create" table="teacher" />}
+            {role === "admin" && (
+              <div className=" hidden lg:block">
+                <FormModal type="create" table="teacher" />
+              </div>
+            )}
           </div>
         </div>
       </div>

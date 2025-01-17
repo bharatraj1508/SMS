@@ -8,6 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "./ui/button";
+import TeacherForm from "./forms/TeacherForm";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+
+const forms: {
+  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+} = {
+  teacher: (type, data) => <TeacherForm type={type} data={data} />,
+  // student: (type, data) => <StudentForm type={type} data={data} />
+};
 
 export default function FormModal({
   table,
@@ -63,7 +72,7 @@ export default function FormModal({
         </div>
       </>
     ) : type === "create" || "update" ? (
-      "create or update"
+      forms[table](type, data)
     ) : (
       "wrong input"
     );
@@ -75,6 +84,10 @@ export default function FormModal({
         <GetIcon />
       </DialogTrigger>
       <DialogContent>
+        <VisuallyHidden.Root>
+          <DialogTitle>Title</DialogTitle>
+          <DialogDescription>Description</DialogDescription>
+        </VisuallyHidden.Root>
         <Form />
       </DialogContent>
     </Dialog>
