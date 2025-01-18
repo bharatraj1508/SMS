@@ -6,12 +6,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import dynamic from "next/dynamic";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "./ui/button";
-import TeacherForm from "./forms/TeacherForm";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import StudentForm from "./forms/StudentForm";
-import ParentForm from "./forms/ParentForm";
+
+const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const StudentForm = dynamic(() => import("./forms/StudentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ParentForm = dynamic(() => import("./forms/ParentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;

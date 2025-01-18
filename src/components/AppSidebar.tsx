@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Sidebar,
   SidebarContent,
@@ -12,17 +14,17 @@ import { menuItems } from "./Menu";
 import Link from "next/link";
 import Image from "next/image";
 import { role } from "@/lib/data";
+import { usePathname } from "next/navigation";
 
 export default function AppSidebar() {
+  const paths = usePathname();
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           {menuItems.map((group) => (
-            <>
-              <SidebarGroupLabel key={group.title}>
-                {group.title}
-              </SidebarGroupLabel>
+            <div key={group.title}>
+              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="ml-2">
                   {group.items.map((item) => {
@@ -31,6 +33,7 @@ export default function AppSidebar() {
                         <SidebarMenuItem className="my-1.5" key={item.label}>
                           <SidebarMenuButton
                             asChild
+                            isActive={paths === item.href}
                             className="hover:bg-red-100 transition-all duration-300"
                           >
                             <Link href={item.href}>
@@ -49,7 +52,7 @@ export default function AppSidebar() {
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
-            </>
+            </div>
           ))}
         </SidebarGroup>
       </SidebarContent>
