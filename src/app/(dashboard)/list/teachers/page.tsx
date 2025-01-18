@@ -6,6 +6,7 @@ import { role } from "../../../../lib/data";
 import { Eye, SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
 import InfoTable from "@/components/InfoTable";
 import FormModal from "@/components/FormModal";
+import Link from "next/link";
 
 type Teacher = {
   id: number;
@@ -92,7 +93,9 @@ export default function TeacherListPage() {
       </TableCell>
       <TableCell>
         <div className="flex items-center justify-evenly gap-2">
-          <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
+          <Link href={`/list/teachers/${item.id}`}>
+            <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
+          </Link>
           {role === "admin" && (
             <>
               <FormModal
@@ -150,11 +153,7 @@ export default function TeacherListPage() {
               />
             </button>
 
-            {role === "admin" && (
-              <div className=" hidden lg:block">
-                <FormModal type="create" table="teacher" />
-              </div>
-            )}
+            {role === "admin" && <FormModal type="create" table="teacher" />}
           </div>
         </div>
       </div>

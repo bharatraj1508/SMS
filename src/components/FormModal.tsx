@@ -10,12 +10,15 @@ import { Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "./ui/button";
 import TeacherForm from "./forms/TeacherForm";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import StudentForm from "./forms/StudentForm";
+import ParentForm from "./forms/ParentForm";
 
 const forms: {
   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
 } = {
   teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  // student: (type, data) => <StudentForm type={type} data={data} />
+  student: (type, data) => <StudentForm type={type} data={data} />,
+  parent: (type, data) => <ParentForm type={type} data={data} />,
 };
 
 export default function FormModal({

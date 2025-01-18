@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import InputField from "../InputField";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 const schema = z.object({
   username: z
@@ -20,23 +19,18 @@ const schema = z.object({
   lastName: z.string().min(1, { message: "Last name is required!" }),
   phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
   sex: z.enum(["male", "female", "others"], { message: "Sex is required!" }),
-  img: z.instanceof(File, { message: "Image is required" }),
 });
 
 type Inputs = z.infer<typeof schema>;
 
-export default function TeacherForm({
+export default function ParentForm({
   type,
   data,
 }: {
   type: "create" | "update";
   data?: any;
 }) {
-  const [sex, setSex] = useState(data?.sex || "");
-
   const {
     register,
     handleSubmit,
@@ -56,7 +50,7 @@ export default function TeacherForm({
       onSubmit={onSubmit}
     >
       <h1 className="text-base lg:text-xl font-semibold">
-        {type === "create" ? "Create" : "Update"} teacher
+        {type === "create" ? "Create" : "Update"} parent
       </h1>
       <div className="flex flex-col gap-4">
         <span className="text-xs text-gray-400 font-medium">
@@ -157,29 +151,6 @@ export default function TeacherForm({
             defaultValue={data?.address}
             register={register}
             error={errors.address}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <span className="text-xs text-gray-400 font-medium">
-          Other Information
-        </span>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <InputField
-            label="Blood Type"
-            name="bloodType"
-            defaultValue={data?.bloodType}
-            register={register}
-            error={errors.bloodType}
-          />
-          <InputField
-            label="Birthday"
-            name="birthday"
-            defaultValue={data?.birthday}
-            register={register}
-            error={errors.birthday}
-            type="date"
           />
         </div>
       </div>

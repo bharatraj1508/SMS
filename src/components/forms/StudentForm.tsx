@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import InputField from "../InputField";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 const schema = z.object({
   username: z
@@ -28,15 +27,13 @@ const schema = z.object({
 
 type Inputs = z.infer<typeof schema>;
 
-export default function TeacherForm({
+export default function StudentForm({
   type,
   data,
 }: {
   type: "create" | "update";
   data?: any;
 }) {
-  const [sex, setSex] = useState(data?.sex || "");
-
   const {
     register,
     handleSubmit,
@@ -56,7 +53,7 @@ export default function TeacherForm({
       onSubmit={onSubmit}
     >
       <h1 className="text-base lg:text-xl font-semibold">
-        {type === "create" ? "Create" : "Update"} teacher
+        {type === "create" ? "Create" : "Update"} student
       </h1>
       <div className="flex flex-col gap-4">
         <span className="text-xs text-gray-400 font-medium">
@@ -184,12 +181,12 @@ export default function TeacherForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 w-full">
         <span className="text-xs text-gray-400 font-medium">
           Upload a picture
         </span>
         <div className="grid grid-cols-3 gap-4">
-          <Input id="picture" type="file" />
+          <Input id="picture" type="file" className="w-full" />
         </div>
       </div>
 
