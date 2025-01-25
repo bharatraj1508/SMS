@@ -1,4 +1,3 @@
-import { teachersData } from "../../../../lib/data";
 import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { role } from "../../../../lib/data";
@@ -7,17 +6,14 @@ import { Eye, SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
 import InfoTable from "@/components/InfoTable";
 import FormModal from "@/components/FormModal";
 import Link from "next/link";
+import { Class, Subject, Teacher } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import TablePagination from "@/components/TablePagination";
 
-type Teacher = {
-  id: number;
-  teacherId: string;
-  name: string;
-  email?: string;
-  photo: string;
-  phone: string;
-  subjects: string[];
-  classes: string[];
-  address: string;
+type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
+type Props = {
+  searchParams: { [key: string]: string | undefined };
 };
 
 const columns = [
@@ -58,71 +54,82 @@ const columns = [
   },
 ];
 
-export default function TeacherListPage() {
-  const row = (item: Teacher) => (
-    <TableRow className="even:bg-gray-100">
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Image
-            src={item.photo}
-            alt="user"
-            width={40}
-            height={40}
-            className="md:hidden xl:block rounded-full w-10 h-10 object-cover"
-          />
-          <div className="flex flex-col">
-            <p className="font-semibold">{item.name}</p>
-            <p className="text-xs text-gray-500">{item.email}</p>
-          </div>
+const row = (item: TeacherList) => (
+  <TableRow className="even:bg-gray-100">
+    <TableCell>
+      <div className="flex items-center gap-2">
+        <Image
+          src={item.img || "/noAvatar.png"}
+          alt="user"
+          width={40}
+          height={40}
+          className="md:hidden xl:block rounded-full w-10 h-10 object-cover"
+        />
+        <div className="flex flex-col">
+          <p className="font-semibold">
+            {item.firstName} {item.lastName}
+          </p>
+          <p className="text-xs text-gray-500">{item.email}</p>
         </div>
-      </TableCell>
-      <TableCell className="hidden md:table-cell text-xs">
-        {item.phone}
-      </TableCell>
-      <TableCell className="hidden md:table-cell text-xs">
-        {item.subjects.join(", ")}
-      </TableCell>
-      <TableCell className="text-xs hidden md:table-cell">
-        {item.classes.join(", ")}
-      </TableCell>
-      <TableCell className="text-xs hidden lg:table-cell">
-        {item.phone}
-      </TableCell>
-      <TableCell className="text-xs hidden lg:table-cell">
-        {item.address}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center justify-evenly gap-2">
-          <Link href={`/list/teachers/${item.id}`}>
-            <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
-          </Link>
-          {role === "admin" && (
-            <>
-              <FormModal
-                type="update"
-                table="teacher"
-                data={{
-                  id: 1,
-                  username: "deanguerrero",
-                  email: "deanguerrero@gmail.com",
-                  password: "password",
-                  firstName: "Dean",
-                  lastName: "Guerrero",
-                  phone: "+1 234 567 89",
-                  address: "1234 Main St, Anytown, USA",
-                  bloodType: "A+",
-                  dateOfBirth: "2000-01-01",
-                  sex: "male",
-                  img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
-                }}
-              />
-              <FormModal type="delete" table="teacher" />
-            </>
-          )}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
+      </div>
+    </TableCell>
+    <TableCell className="hidden md:table-cell text-xs">{item.phone}</TableCell>
+    <TableCell className="hidden md:table-cell text-xs">
+      {item.subjects.map((subject) => subject.name).join(", ")}
+    </TableCell>
+    <TableCell className="text-xs hidden md:table-cell">
+      {item.classes.map((classItem) => classItem.name).join(", ")}
+    </TableCell>
+    <TableCell className="text-xs hidden lg:table-cell">{item.phone}</TableCell>
+    <TableCell className="text-xs hidden lg:table-cell">
+      {item.address}
+    </TableCell>
+    <TableCell>
+      <div className="flex items-center justify-evenly gap-2">
+        <Link href={`/list/teachers/${item.id}`}>
+          <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
+        </Link>
+        {role === "admin" && (
+          <>
+            <FormModal
+              type="update"
+              table="teacher"
+              data={{
+                id: 1,
+                username: "deanguerrero",
+                email: "deanguerrero@gmail.com",
+                password: "password",
+                firstName: "Dean",
+                lastName: "Guerrero",
+                phone: "+1 234 567 89",
+                address: "1234 Main St, Anytown, USA",
+                bloodType: "A+",
+                dateOfBirth: "2000-01-01",
+                sex: "male",
+                img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
+              }}
+            />
+            <FormModal type="delete" table="teacher" />
+          </>
+        )}
+      </div>
+    </TableCell>
+  </TableRow>
+);
+
+export default async function TeacherListPage({ searchParams }: Props) {
+  const { page, ...queryParams } = searchParams;
+
+  const p = page ? parseInt(page) : 1;
+
+  const [data, count] = await prisma.$transaction([
+    prisma.teacher.findMany({
+      include: { subjects: true, classes: true },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.teacher.count(),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -157,7 +164,8 @@ export default function TeacherListPage() {
           </div>
         </div>
       </div>
-      <InfoTable columns={columns} row={row} data={teachersData} />
+      <InfoTable columns={columns} row={row} data={data} />
+      <TablePagination page={p} count={count} />
     </div>
   );
 }

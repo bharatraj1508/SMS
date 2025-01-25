@@ -33,7 +33,6 @@ export default function InfoTable({
         </TableHeader>
         <TableBody>{data.map((item) => row(item))}</TableBody>
       </Table>
-      <TablePagination />
     </div>
   );
 }
