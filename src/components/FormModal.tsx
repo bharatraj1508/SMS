@@ -50,7 +50,7 @@ export default function FormModal({
     | "announcement";
   type: "create" | "update" | "delete";
   data?: any;
-  id?: number;
+  id?: number | string;
 }) {
   const GetIcon = (): React.ReactNode => {
     return type === "create" ? (

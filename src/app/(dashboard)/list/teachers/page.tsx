@@ -6,10 +6,12 @@ import { Eye, SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
 import InfoTable from "@/components/InfoTable";
 import FormModal from "@/components/FormModal";
 import Link from "next/link";
-import { Class, Subject, Teacher } from "@prisma/client";
+import { Class, Prisma, Subject, Teacher } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import TablePagination from "@/components/TablePagination";
+import { cn } from "@/lib/utils";
+import TableSearch from "@/components/TableSearch";
 
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 type Props = {
@@ -73,7 +75,7 @@ const row = (item: TeacherList) => (
         </div>
       </div>
     </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">{item.phone}</TableCell>
+    <TableCell className="hidden md:table-cell text-xs">{item.id}</TableCell>
     <TableCell className="hidden md:table-cell text-xs">
       {item.subjects.map((subject) => subject.name).join(", ")}
     </TableCell>
@@ -121,14 +123,37 @@ export default async function TeacherListPage({ searchParams }: Props) {
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
+  const query: Prisma.TeacherWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value) {
+        switch (key) {
+          case "classId":
+            query.lessons = {
+              some: { classId: parseInt(queryParams.classId!) },
+            };
+            break;
+          case "search":
+            query.firstName = { contains: value, mode: "insensitive" };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
 
   const [data, count] = await prisma.$transaction([
     prisma.teacher.findMany({
+      where: query,
       include: { subjects: true, classes: true },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
-    prisma.teacher.count(),
+    prisma.teacher.count({
+      where: query,
+    }),
   ]);
 
   return (
@@ -136,14 +161,7 @@ export default async function TeacherListPage({ searchParams }: Props) {
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-xl font-semibold">All Teachers</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
-            <Image src="/search.png" alt="" width={14} height={14} />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-[200px] p-2 bg-transparent outline-none"
-            />
-          </div>
+          <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-chart-1">
               <SlidersHorizontal
@@ -164,8 +182,14 @@ export default async function TeacherListPage({ searchParams }: Props) {
           </div>
         </div>
       </div>
-      <InfoTable columns={columns} row={row} data={data} />
-      <TablePagination page={p} count={count} />
+      <InfoTable columns={columns} row={row} data={data} count={count} />
+      <div
+        className={cn(
+          Math.floor(count / ITEM_PER_PAGE) == 0 ? "hidden" : "block"
+        )}
+      >
+        <TablePagination page={p} count={count} />
+      </div>
     </div>
   );
 }

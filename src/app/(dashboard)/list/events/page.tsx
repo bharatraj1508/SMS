@@ -1,19 +1,19 @@
-import { eventsData } from "../../../../lib/data";
 import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
 import InfoTable from "@/components/InfoTable";
 import FormModal from "@/components/FormModal";
+import { Class, Event, Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import TableSearch from "@/components/TableSearch";
+import { cn } from "@/lib/utils";
+import TablePagination from "@/components/TablePagination";
 
-type Event = {
-  id: number;
-  title: string;
-  class: string;
-  date: string;
-  startTime: string;
-  endTime: number;
+type EventList = Event & { class: Class };
+type Props = {
+  searchParams: { [key: string]: string | undefined };
 };
 
 const columns = [
@@ -48,44 +48,79 @@ const columns = [
   },
 ];
 
-export default function EventListPage() {
-  const row = (item: Event) => (
-    <TableRow className="even:bg-gray-100">
-      <TableCell className="text-xs">{item.title}</TableCell>
-      <TableCell className="text-xs hidden md:table-cell">
-        {item.class}
-      </TableCell>
-      <TableCell className="text-xs">{item.date}</TableCell>
-      <TableCell className="text-xs hidden md:table-cell">
-        {item.startTime}
-      </TableCell>
-      <TableCell className="text-xs hidden md:table-cell">
-        {item.endTime}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center justify-evenly gap-2">
-          <FormModal type="update" table="event" />
-          {role === ("admin" || "teacher") && (
-            <FormModal type="delete" table="event" />
-          )}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
+const row = (item: EventList) => (
+  <TableRow className="even:bg-gray-100">
+    <TableCell className="text-xs">{item.title}</TableCell>
+    <TableCell className="text-xs hidden md:table-cell">
+      {item.class.name}
+    </TableCell>
+    <TableCell className="text-xs">
+      {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+    </TableCell>
+    <TableCell className="text-xs hidden md:table-cell">
+      {item.startTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}
+    </TableCell>
+    <TableCell className="text-xs hidden md:table-cell">
+      {item.endTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}
+    </TableCell>
+    <TableCell>
+      <div className="flex items-center justify-evenly gap-2">
+        <FormModal type="update" table="event" />
+        {(role === "admin" || role === "teacher") && (
+          <FormModal type="delete" table="event" />
+        )}
+      </div>
+    </TableCell>
+  </TableRow>
+);
+export default async function EventListPage({ searchParams }: Props) {
+  const { page, ...queryParams } = searchParams;
+
+  const p = page ? parseInt(page) : 1;
+  const query: Prisma.EventWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value) {
+        switch (key) {
+          case "search":
+            query.title = { contains: value, mode: "insensitive" };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.event.findMany({
+      where: query,
+      include: {
+        class: { select: { name: true } },
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.event.count({
+      where: query,
+    }),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-xl font-semibold">All Events</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-          <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
-            <Image src="/search.png" alt="" width={14} height={14} />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-[200px] p-2 bg-transparent outline-none"
-            />
-          </div>
+          <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-chart-1">
               <SlidersHorizontal
@@ -101,13 +136,20 @@ export default function EventListPage() {
                 className="text-white"
               />
             </button>
-            {role === ("admin" || "teacher") && (
+            {(role === "admin" || role === "teacher") && (
               <FormModal type="create" table="event" />
             )}
           </div>
         </div>
       </div>
-      <InfoTable columns={columns} row={row} data={eventsData} />
+      <InfoTable columns={columns} row={row} data={data} count={count} />
+      <div
+        className={cn(
+          Math.floor(count / ITEM_PER_PAGE) <= 1 ? "hidden" : "block"
+        )}
+      >
+        <TablePagination page={p} count={count} />
+      </div>
     </div>
   );
 }

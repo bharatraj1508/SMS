@@ -3,6 +3,7 @@
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/pagination";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export default function TablePagination({
   page,
@@ -19,44 +21,113 @@ export default function TablePagination({
   count: number;
 }) {
   const numOfPages = Math.ceil(count / ITEM_PER_PAGE);
+  const router = useRouter();
 
-  const url = (page: number): string => {
-    if (typeof window === "undefined") return "#";
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("page", page.toString());
-    return url.toString();
+  const pageChange = (page: number) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", page.toString());
+    router.push(`${window.location.pathname}?${params}`);
   };
+
+  const generatePages = () => {
+    const pages: (number | JSX.Element)[] = [];
+
+    if (numOfPages <= 5) {
+      for (let i = 1; i <= numOfPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (page <= 3) {
+        pages.push(
+          1,
+          2,
+          3,
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>,
+          numOfPages
+        );
+      } else if (page >= numOfPages - 2) {
+        pages.push(
+          1,
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>,
+          numOfPages - 2,
+          numOfPages - 1,
+          numOfPages
+        );
+      } else {
+        pages.push(
+          1,
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>,
+          page - 1,
+          page,
+          page + 1,
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>,
+          numOfPages
+        );
+      }
+    }
+
+    return pages;
+  };
+
+  const visiblePages = generatePages();
 
   return (
     <Pagination>
       <PaginationContent>
+        {/* Previous Button */}
         <PaginationItem>
           <PaginationPrevious
-            href={url(page - 1)}
+            href="#"
+            onClick={(event) => {
+              event.preventDefault();
+              if (page > 1) pageChange(page - 1);
+            }}
             aria-disabled={page <= 1}
             className={cn(
               page <= 1 ? "pointer-events-none opacity-50" : undefined
             )}
           />
         </PaginationItem>
-        {Array.from({ length: numOfPages }, (_, index) => {
-          return (
-            <>
-              <PaginationItem>
-                <PaginationLink
-                  href={`/list/teachers?page=${index + 1}`}
-                  isActive={page === index + 1}
-                >
-                  {index + 1}
-                </PaginationLink>
-              </PaginationItem>
-            </>
-          );
-        })}
+
+        {/* Page Numbers */}
+        {visiblePages.map((pageNumber, index) => (
+          <PaginationItem
+            key={index}
+            className="flex items-center justify-center"
+          >
+            {typeof pageNumber === "number" ? (
+              <PaginationLink
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  pageChange(pageNumber);
+                }}
+                isActive={page === pageNumber}
+              >
+                {pageNumber}
+              </PaginationLink>
+            ) : (
+              <span className="px-3">...</span> // Ellipses
+            )}
+          </PaginationItem>
+        ))}
+
+        {/* Next Button */}
         <PaginationItem>
           <PaginationNext
-            href={url(page + 1)}
+            href="#"
+            onClick={(event) => {
+              event.preventDefault();
+              if (page < numOfPages) pageChange(page + 1);
+            }}
             aria-disabled={page == numOfPages}
             className={cn(
               page == numOfPages ? "pointer-events-none opacity-50" : undefined
