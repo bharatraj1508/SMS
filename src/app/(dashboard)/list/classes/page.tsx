@@ -1,6 +1,3 @@
-import { classesData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -12,62 +9,72 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import TablePagination from "@/components/TablePagination";
 import { cn } from "@/lib/utils";
 import TableSearch from "@/components/TableSearch";
+import { getUserRole } from "@/lib/role";
 
 type ClassList = Class & { supervisor: Teacher };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Class",
-    accessor: "name",
-    className: "text-left",
-  },
-  {
-    header: "Supervisor",
-    accessor: "supervisor",
-  },
-  {
-    header: "Capacity",
-    accessor: "capacity",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Grade",
-    accessor: "grade",
-    className: "hidden md:table-cell",
-  },
-
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: ClassList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.name}</TableCell>
-    <TableCell className="text-xs">
-      {item.supervisor.firstName + " " + item.supervisor.lastName}
-    </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">
-      {item.capacity}
-    </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">
-      {item.name[0]}
-    </TableCell>
-
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="subject" />
-        {role === "admin" && <FormModal type="delete" table="class" />}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function ClassListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const columns = [
+    {
+      header: "Class",
+      accessor: "name",
+      className: "text-left",
+    },
+    {
+      header: "Supervisor",
+      accessor: "supervisor",
+    },
+    {
+      header: "Capacity",
+      accessor: "capacity",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Grade",
+      accessor: "grade",
+      className: "hidden md:table-cell",
+    },
+
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: ClassList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.name}</TableCell>
+      <TableCell className="text-xs">
+        {item.supervisor.firstName + " " + item.supervisor.lastName}
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-xs">
+        {item.capacity}
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-xs">
+        {item.name[0]}
+      </TableCell>
+
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {role === "admin" && (
+            <>
+              <FormModal type="update" table="subject" />
+              <FormModal type="delete" table="class" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;

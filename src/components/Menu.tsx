@@ -1,11 +1,11 @@
-export const menuItems = [
+export const getMenuItems = (role: string) => [
   {
     title: "MENU",
     items: [
       {
         icon: "/home.png",
         label: "Home",
-        href: "/",
+        href: `/${role}`,
         visible: ["admin", "teacher", "student", "parent"],
       },
       {

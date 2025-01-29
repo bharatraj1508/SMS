@@ -10,14 +10,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar";
-import { menuItems } from "./Menu";
+import { getMenuItems } from "./Menu";
 import Link from "next/link";
 import Image from "next/image";
-import { role } from "@/lib/data";
 import { usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 export default function AppSidebar() {
   const paths = usePathname();
+
+  const { user } = useUser();
+
+  const role = user?.publicMetadata.role as string;
+
+  const menuItems = getMenuItems(role);
+
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarContent>

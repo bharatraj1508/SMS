@@ -1,4 +1,3 @@
-import { role } from "../../../../lib/data";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -10,54 +9,65 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
 import TableSearch from "@/components/TableSearch";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type AnnouncementList = Announcement & { class: Class };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: AnnouncementList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.title}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.class.name}
-    </TableCell>
-    <TableCell className="text-xs">
-      {new Intl.DateTimeFormat("en-US").format(item.date)}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="announcement" />
-        {(role === "admin" || role === "teacher") && (
-          <FormModal type="delete" table="announcement" />
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function EventListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: AnnouncementList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.title}</TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.class?.name || "all"}
+      </TableCell>
+      <TableCell className="text-xs">
+        {new Intl.DateTimeFormat("en-US").format(item.date)}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {role === "admin" && (
+            <>
+              <FormModal type="delete" table="announcement" />{" "}
+              <FormModal type="update" table="announcement" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -76,6 +86,22 @@ export default async function EventListPage({ searchParams }: Props) {
       }
     }
   }
+
+  const roleCondition = {
+    teacher: { lessons: { some: { teacherId: currentUserId } } },
+    student: { students: { some: { id: currentUserId } } },
+    parent: { students: { some: { parentId: currentUserId } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    {
+      class:
+        (roleCondition[
+          role as keyof typeof roleCondition
+        ] as Prisma.ClassWhereInput) || {},
+    },
+  ];
 
   const [data, count] = await prisma.$transaction([
     prisma.announcement.findMany({
@@ -114,7 +140,7 @@ export default async function EventListPage({ searchParams }: Props) {
                 className="text-white"
               />
             </button>
-            {(role === "admin" || role === "teacher") && (
+            {role === "admin" && (
               <FormModal type="create" table="announcement" />
             )}
           </div>

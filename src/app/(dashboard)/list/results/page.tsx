@@ -1,18 +1,15 @@
-import { resultsData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
 import InfoTable from "@/components/InfoTable";
 import FormModal from "@/components/FormModal";
-import { Class, Prisma, Teacher } from "@prisma/client";
-import { Result } from "postcss";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import TableSearch from "@/components/TableSearch";
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type ResultList = {
   id: number;
@@ -28,76 +25,87 @@ type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Student",
-    accessor: "student",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Type",
-    accessor: "type",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Score",
-    accessor: "score",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: ResultList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.title}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">{item.class}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.teacherName}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.studentName}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {new Intl.DateTimeFormat("en-US").format(item.date)}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.examType}
-    </TableCell>
-    <TableCell className="text-xs">{item.score}</TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="subject" />
-        {(role === "admin" || role === "teacher") && (
-          <FormModal type="delete" table="result" />
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function ResultListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Student",
+      accessor: "student",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Type",
+      accessor: "type",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Score",
+      accessor: "score",
+    },
+    ...(role === "admin" || role === "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: ResultList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.title}</TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.class}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.teacherName}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.studentName}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US").format(item.date)}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.examType}
+      </TableCell>
+      <TableCell className="text-xs">{item.score}</TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {(role === "admin" || role === "teacher") && (
+            <>
+              <FormModal type="update" table="subject" />
+              <FormModal type="delete" table="result" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -128,6 +136,28 @@ export default async function ResultListPage({ searchParams }: Props) {
         }
       }
     }
+  }
+
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.OR = [
+        { exam: { lesson: { teacherId: currentUserId! } } },
+        { assignment: { lesson: { teacherId: currentUserId! } } },
+      ];
+      break;
+    case "student":
+      query.studentId = currentUserId!;
+      break;
+    case "parent":
+      query.student = {
+        parentId: currentUserId!,
+      };
+      break;
+
+    default:
+      break;
   }
 
   const [dataResponse, count] = await prisma.$transaction([

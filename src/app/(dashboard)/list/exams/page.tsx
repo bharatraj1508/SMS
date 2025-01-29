@@ -1,6 +1,3 @@
-import { examsData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -12,6 +9,7 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
 import TableSearch from "@/components/TableSearch";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type ExamList = Exam & {
   lesson: {
@@ -24,61 +22,71 @@ type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Subject",
-    accessor: "subject",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: ExamList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.lesson.subject.name}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.lesson.class.name}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.lesson.teacher.firstName + " " + item.lesson.teacher.lastName}
-    </TableCell>
-    <TableCell className="text-xs">
-      {new Intl.DateTimeFormat("en-US").format(item.startTime)}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="subject" />
-
-        {(role === "admin" || role === "teacher") && (
-          <FormModal type="delete" table="exam" />
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function ExamListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+
+  const columns = [
+    {
+      header: "Subject",
+      accessor: "subject",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+    },
+    ...(role === "admin" || role === "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: ExamList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.lesson.subject.name}</TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.lesson.class.name}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.lesson.teacher.firstName + " " + item.lesson.teacher.lastName}
+      </TableCell>
+      <TableCell className="text-xs">
+        {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {(role === "admin" || role === "teacher") && (
+            <>
+              <FormModal type="update" table="subject" />
+              <FormModal type="delete" table="exam" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
   const query: Prisma.ExamWhereInput = {};
+
+  query.lesson = {};
 
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
@@ -101,18 +109,36 @@ export default async function ExamListPage({ searchParams }: Props) {
             ];
             break;
           case "teacherId":
-            query.lesson = {
-              teacherId: value,
-            };
+            query.lesson.teacherId = value;
             break;
           case "classId":
-            query.lesson = { classId: parseInt(value) };
+            query.lesson.classId = parseInt(value);
             break;
           default:
             break;
         }
       }
     }
+  }
+
+  switch (role) {
+    case "admin":
+      break;
+
+    case "teacher":
+      query.lesson.teacherId = currentUserId!;
+      break;
+
+    case "student":
+      query.lesson.class = { students: { some: { id: currentUserId! } } };
+      break;
+
+    case "parent":
+      query.lesson.class = { students: { some: { parentId: currentUserId! } } };
+      break;
+
+    default:
+      break;
   }
 
   const [data, count] = await prisma.$transaction([
@@ -157,7 +183,7 @@ export default async function ExamListPage({ searchParams }: Props) {
               />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal type="delete" table="exam" />
+              <FormModal type="create" table="exam" />
             )}
           </div>
         </div>

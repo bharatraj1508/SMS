@@ -14,6 +14,7 @@ import {
   Volume2,
   MessageCircleMore,
 } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   return (
@@ -27,7 +28,7 @@ export default function Navbar() {
         />
       </div>
 
-      <div>
+      {/* <div>
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Image
@@ -65,7 +66,8 @@ export default function Navbar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </div> */}
+      <UserButton />
     </div>
   );
 }

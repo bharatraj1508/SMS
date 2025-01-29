@@ -1,5 +1,3 @@
-import { studentsData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
 import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
@@ -13,105 +11,115 @@ import { prisma } from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import TableSearch from "@/components/TableSearch";
 import { cn } from "@/lib/utils";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type StudentList = Student & { class: Class };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-    className: "text-left",
-  },
-  {
-    header: "Student ID",
-    accessor: "teacherId",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Class",
-    accessor: "subjects",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: StudentList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell>
-      <div className="flex items-center gap-2">
-        <Image
-          src={item.img || "/noAvatar.png"}
-          alt="user"
-          width={40}
-          height={40}
-          className="md:hidden xl:block rounded-full w-10 h-10 object-cover"
-        />
-        <div className="flex flex-col">
-          <p className="font-semibold">{item.firstName}</p>
-          <p className="text-xs text-gray-500">{item.class.name}</p>
-        </div>
-      </div>
-    </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">
-      {item.username}
-    </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">
-      {item.class.name[0]}
-    </TableCell>
-    <TableCell className="text-xs hidden lg:table-cell">{item.phone}</TableCell>
-    <TableCell className="text-xs hidden lg:table-cell">
-      {item.address}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <Link href={`/list/students/${item.id}`}>
-          <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
-        </Link>
-        {(role === "admin" || role === "teacher") && (
-          <>
-            <FormModal
-              type="update"
-              table="student"
-              data={{
-                id: 1,
-                username: "deanguerrero",
-                email: "deanguerrero@gmail.com",
-                password: "password",
-                firstName: "Dean",
-                lastName: "Guerrero",
-                phone: "+1 234 567 89",
-                address: "1234 Main St, Anytown, USA",
-                bloodType: "A+",
-                dateOfBirth: "2000-01-01",
-                sex: "male",
-                img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
-              }}
-            />
-            <FormModal type="delete" table="student" id={item.id} />
-          </>
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function StudentListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+      className: "text-left",
+    },
+    {
+      header: "Student ID",
+      accessor: "teacherId",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Class",
+      accessor: "subjects",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "hidden lg:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "hidden lg:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: StudentList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Image
+            src={item.img || "/noAvatar.png"}
+            alt="user"
+            width={40}
+            height={40}
+            className="md:hidden xl:block rounded-full w-10 h-10 object-cover"
+          />
+          <div className="flex flex-col">
+            <p className="font-semibold">{item.firstName}</p>
+            <p className="text-xs text-gray-500">{item.class.name}</p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-xs">
+        {item.username}
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-xs">
+        {item.class.name[0]}
+      </TableCell>
+      <TableCell className="text-xs hidden lg:table-cell">
+        {item.phone}
+      </TableCell>
+      <TableCell className="text-xs hidden lg:table-cell">
+        {item.address}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          <Link href={`/list/students/${item.id}`}>
+            <Eye className="w-5 h-5 cursor-pointer hover:scale-110 transition-all duration-300" />
+          </Link>
+          {role === "admin" && (
+            <>
+              <FormModal
+                type="update"
+                table="student"
+                data={{
+                  id: 1,
+                  username: "deanguerrero",
+                  email: "deanguerrero@gmail.com",
+                  password: "password",
+                  firstName: "Dean",
+                  lastName: "Guerrero",
+                  phone: "+1 234 567 89",
+                  address: "1234 Main St, Anytown, USA",
+                  bloodType: "A+",
+                  dateOfBirth: "2000-01-01",
+                  sex: "male",
+                  img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                }}
+              />
+              <FormModal type="delete" table="student" id={item.id} />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -136,6 +144,16 @@ export default async function StudentListPage({ searchParams }: Props) {
         }
       }
     }
+  }
+
+  if (role === "teacher") {
+    query.class = {
+      lessons: {
+        some: {
+          teacherId: currentUserId!,
+        },
+      },
+    };
   }
 
   const [data, count] = await prisma.$transaction([
@@ -171,9 +189,7 @@ export default async function StudentListPage({ searchParams }: Props) {
                 className="text-white"
               />
             </button>
-            {(role === "admin" || role === "teacher") && (
-              <FormModal type="create" table="student" />
-            )}
+            {role === "admin" && <FormModal type="create" table="student" />}
           </div>
         </div>
       </div>

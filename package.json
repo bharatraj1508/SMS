@@ -12,6 +12,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/elements": "^0.22.15",
+    "@clerk/nextjs": "^6.10.2",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^6.2.1",
     "@radix-ui/react-dialog": "^1.1.4",

@@ -1,4 +1,3 @@
-import { role } from "../../../../lib/data";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -10,78 +9,88 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import TableSearch from "@/components/TableSearch";
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type EventList = Event & { class: Class };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-  },
-  {
-    header: "Start Time",
-    accessor: "startTime",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "End Time",
-    accessor: "startTime",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: EventList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.title}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.class.name}
-    </TableCell>
-    <TableCell className="text-xs">
-      {new Intl.DateTimeFormat("en-US").format(item.startTime)}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.startTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })}
-    </TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.endTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="event" />
-        {(role === "admin" || role === "teacher") && (
-          <FormModal type="delete" table="event" />
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function EventListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+    },
+    {
+      header: "Start Time",
+      accessor: "startTime",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "End Time",
+      accessor: "startTime",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin " || role === "teacher"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: EventList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.title}</TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.class?.name || "all"}
+      </TableCell>
+      <TableCell className="text-xs">
+        {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.startTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })}
+      </TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.endTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {(role === "admin" || role === "teacher") && (
+            <>
+              <FormModal type="update" table="event" />
+              <FormModal type="delete" table="event" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -100,6 +109,22 @@ export default async function EventListPage({ searchParams }: Props) {
       }
     }
   }
+
+  const roleCondition = {
+    teacher: { lessons: { some: { teacherId: currentUserId } } },
+    student: { students: { some: { id: currentUserId } } },
+    parent: { students: { some: { parentId: currentUserId } } },
+  };
+
+  query.OR = [
+    { classId: null },
+    {
+      class:
+        (roleCondition[
+          role as keyof typeof roleCondition
+        ] as Prisma.ClassWhereInput) || {},
+    },
+  ];
 
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({

@@ -1,6 +1,3 @@
-import { lessonsData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -12,52 +9,62 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import TablePagination from "@/components/TablePagination";
 import { cn } from "@/lib/utils";
 import TableSearch from "@/components/TableSearch";
+import { getUserRole } from "@/lib/role";
 
 type LessonList = Lesson & { teacher: Teacher; class: Class; subject: Subject };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Subject",
-    accessor: "subject",
-    className: "text-left",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: LessonList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.subject.name}</TableCell>
-    <TableCell className="text-xs hidden md:table-cell">
-      {item.class.name}
-    </TableCell>
-    <TableCell className="text-xs">
-      {item.teacher.firstName + " " + item.teacher.lastName}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="subject" />
-        {role === "admin" && <FormModal type="delete" table="lesson" />}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function LessonListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const columns = [
+    {
+      header: "Subject",
+      accessor: "subject",
+      className: "text-left",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Teacher",
+      accessor: "teacher",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: LessonList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.subject.name}</TableCell>
+      <TableCell className="text-xs hidden md:table-cell">
+        {item.class.name}
+      </TableCell>
+      <TableCell className="text-xs">
+        {item.teacher.firstName + " " + item.teacher.lastName}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {role === "admin" && (
+            <>
+              <FormModal type="update" table="subject" />
+              <FormModal type="delete" table="lesson" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;

@@ -1,6 +1,3 @@
-import { parentsData } from "../../../../lib/data";
-import { role } from "../../../../lib/data";
-import Image from "next/image";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { Eye, SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -12,83 +9,92 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import TableSearch from "@/components/TableSearch";
 import TablePagination from "@/components/TablePagination";
 import { cn } from "@/lib/utils";
+import { getUserID, getUserRole } from "@/lib/role";
 
 type ParentList = Parent & { students: Student[] };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Info",
-    accessor: "info",
-    className: "text-left",
-  },
-  {
-    header: "Students",
-    accessor: "students",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Phone",
-    accessor: "phone",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Address",
-    accessor: "address",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: ParentList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell>
-      <div className="flex flex-col">
-        <p className="font-semibold">{item.firstName}</p>
-        <p className="text-xs text-gray-500">{item.email}</p>
-      </div>
-    </TableCell>
-    <TableCell className="hidden md:table-cell text-xs">
-      {item.students.map((student) => student.firstName).join(", ")}
-    </TableCell>
-    <TableCell className="text-xs hidden lg:table-cell">{item.phone}</TableCell>
-    <TableCell className="text-xs hidden lg:table-cell">
-      {item.address}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        {(role === "admin" || role === "teacher") && (
-          <>
-            <FormModal
-              type="update"
-              table="parent"
-              data={{
-                id: 1,
-                username: "deanguerrero",
-                email: "deanguerrero@gmail.com",
-                password: "password",
-                firstName: "Dean",
-                lastName: "Guerrero",
-                phone: "+1 234 567 89",
-                address: "1234 Main St, Anytown, USA",
-                sex: "male",
-                img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
-              }}
-            />
-            <FormModal type="delete" table="parent" />
-          </>
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function StudentListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const currentUserId = await getUserID();
+  const columns = [
+    {
+      header: "Info",
+      accessor: "info",
+      className: "text-left",
+    },
+    {
+      header: "Students",
+      accessor: "students",
+      className: "hidden md:table-cell",
+    },
+    {
+      header: "Phone",
+      accessor: "phone",
+      className: "hidden lg:table-cell",
+    },
+    {
+      header: "Address",
+      accessor: "address",
+      className: "hidden lg:table-cell",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            header: "Actions",
+            accessor: "action",
+            className: "text-center",
+          },
+        ]
+      : []),
+  ];
+
+  const row = (item: ParentList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell>
+        <div className="flex flex-col">
+          <p className="font-semibold">{item.firstName}</p>
+          <p className="text-xs text-gray-500">{item.email}</p>
+        </div>
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-xs">
+        {item.students.map((student) => student.firstName).join(", ")}
+      </TableCell>
+      <TableCell className="text-xs hidden lg:table-cell">
+        {item.phone}
+      </TableCell>
+      <TableCell className="text-xs hidden lg:table-cell">
+        {item.address}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          {role === "admin" && (
+            <>
+              <FormModal
+                type="update"
+                table="parent"
+                data={{
+                  id: 1,
+                  username: "deanguerrero",
+                  email: "deanguerrero@gmail.com",
+                  password: "password",
+                  firstName: "Dean",
+                  lastName: "Guerrero",
+                  phone: "+1 234 567 89",
+                  address: "1234 Main St, Anytown, USA",
+                  sex: "male",
+                  img: "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                }}
+              />
+              <FormModal type="delete" table="parent" />
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -106,6 +112,25 @@ export default async function StudentListPage({ searchParams }: Props) {
         }
       }
     }
+  }
+
+  if (role === "teacher") {
+    const teacherClasses = await prisma.class.findMany({
+      where: {
+        lessons: {
+          some: {
+            teacherId: currentUserId!,
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    query.students = {
+      some: {
+        classId: { in: teacherClasses.map((c) => c.id) },
+      },
+    };
   }
 
   const [data, count] = await prisma.$transaction([
@@ -141,9 +166,7 @@ export default async function StudentListPage({ searchParams }: Props) {
                 className="text-white"
               />
             </button>
-            {(role === "admin" || role === "teacher") && (
-              <FormModal type="create" table="parent" />
-            )}
+            {role === "admin" && <FormModal type="create" table="parent" />}
           </div>
         </div>
       </div>

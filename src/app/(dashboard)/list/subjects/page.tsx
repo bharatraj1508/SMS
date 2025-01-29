@@ -1,4 +1,3 @@
-import { role } from "../../../../lib/data";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { SlidersHorizontal, ArrowDownWideNarrow } from "lucide-react";
@@ -10,46 +9,46 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import TablePagination from "@/components/TablePagination";
 import { cn } from "@/lib/utils";
 import TableSearch from "@/components/TableSearch";
+import { getUserRole } from "@/lib/role";
 
 type SubjectList = Subject & { teachers: Teacher[] };
 type Props = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const columns = [
-  {
-    header: "Subject",
-    accessor: "name",
-    className: "text-left",
-  },
-  {
-    header: "Teachers",
-    accessor: "teachers",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-    className: "text-center",
-  },
-];
-
-const row = (item: SubjectList) => (
-  <TableRow className="even:bg-gray-100">
-    <TableCell className="text-xs">{item.name}</TableCell>
-    <TableCell className="text-xs">
-      {item.teachers.map((teacher) => teacher.firstName).join(", ")}
-    </TableCell>
-    <TableCell>
-      <div className="flex items-center justify-evenly gap-2">
-        <FormModal type="update" table="subject" />
-        {(role === "admin" || role === "teacher") && (
-          <FormModal type="delete" table="subject" />
-        )}
-      </div>
-    </TableCell>
-  </TableRow>
-);
 export default async function SubjectListPage({ searchParams }: Props) {
+  const role = await getUserRole();
+  const columns = [
+    {
+      header: "Subject",
+      accessor: "name",
+      className: "text-left",
+    },
+    {
+      header: "Teachers",
+      accessor: "teachers",
+    },
+    {
+      header: "Actions",
+      accessor: "action",
+      className: "text-center",
+    },
+  ];
+
+  const row = (item: SubjectList) => (
+    <TableRow className="even:bg-gray-100">
+      <TableCell className="text-xs">{item.name}</TableCell>
+      <TableCell className="text-xs">
+        {item.teachers.map((teacher) => teacher.firstName).join(", ")}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-evenly gap-2">
+          <FormModal type="update" table="subject" />
+          {role === "admin" && <FormModal type="delete" table="subject" />}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
   const { page, ...queryParams } = searchParams;
 
   const p = page ? parseInt(page) : 1;
@@ -102,9 +101,7 @@ export default async function SubjectListPage({ searchParams }: Props) {
                 className="text-white"
               />
             </button>
-            {(role === "admin" || role === "teacher") && (
-              <FormModal type="delete" table="subject" />
-            )}
+            {role === "admin" && <FormModal type="create" table="subject" />}
           </div>
         </div>
       </div>
