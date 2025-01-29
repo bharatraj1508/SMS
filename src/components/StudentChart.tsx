@@ -9,27 +9,27 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { gender: "Boys", count: 875, fill: "hsl(var(--chart-1))" },
-  { gender: "Girls", count: 620, fill: "hsl(var(--chart-2))" },
-];
 
-const chartConfig = {
-  total: {
-    label: "Total",
-  },
-  Boys: {
-    label: "Boys",
-    color: "hsl(var(--chart-1))",
-  },
-  Girls: {
-    label: "Girls",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
+export function StudentChart({ boys, girls }: { boys: number; girls: number }) {
+  const chartData = [
+    { gender: "Boys", count: boys, fill: "hsl(var(--chart-1))" },
+    { gender: "Girls", count: girls, fill: "hsl(var(--chart-2))" },
+  ];
 
-export function StudentChart() {
-  const totalVisitors = React.useMemo(() => {
+  const chartConfig = {
+    total: {
+      label: "Total",
+    },
+    Boys: {
+      label: "Boys",
+      color: "hsl(var(--chart-1))",
+    },
+    Girls: {
+      label: "Girls",
+      color: "hsl(var(--chart-2))",
+    },
+  } satisfies ChartConfig;
+  const totalStudents = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.count, 0);
   }, []);
 
@@ -63,7 +63,7 @@ export function StudentChart() {
                         y={viewBox.cy}
                         className="fill-foreground text-2xl font-bold"
                       >
-                        {totalVisitors.toLocaleString()}
+                        {totalStudents.toLocaleString()}
                       </tspan>
                       <tspan
                         x={viewBox.cx}
@@ -84,13 +84,17 @@ export function StudentChart() {
         <div className="flex justify-center gap-16">
           <div className="flex flex-col items-center gap-1">
             <div className="w-5 h-5 bg-chart-1 rounded-full" />
-            <h1 className="font-bold">875</h1>
-            <h2 className="text-xs text-neutral-800">Boys (55%)</h2>
+            <h1 className="font-bold">{boys}</h1>
+            <h2 className="text-xs text-neutral-800">
+              Boys ({Math.round((boys / (boys + girls)) * 100)}%)
+            </h2>
           </div>
           <div className="flex flex-col items-center gap-1">
             <div className="w-5 h-5 bg-chart-2 rounded-full" />
-            <h1 className="font-bold">620</h1>
-            <h2 className="text-xs text-neutral-800">Girls (45%)</h2>
+            <h1 className="font-bold">{girls}</h1>
+            <h2 className="text-xs text-neutral-800">
+              Girls ({Math.round((girls / (boys + girls)) * 100)}%)
+            </h2>
           </div>
         </div>
       </div>

@@ -1,12 +1,22 @@
+import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default function AdminUserCard({
+export default async function AdminUserCard({
   type,
   bgColor,
 }: {
-  type: string;
+  type: "admin" | "teacher" | "student" | "parent";
   bgColor: string;
 }) {
+  const moduleMap: Record<typeof type, any> = {
+    admin: prisma.admin,
+    teacher: prisma.teacher,
+    parent: prisma.parent,
+    student: prisma.student,
+  };
+
+  const count = await moduleMap[type].count();
+
   return (
     <div
       className={cn(
@@ -19,7 +29,7 @@ export default function AdminUserCard({
           2024/25
         </span>
       </div>
-      <h1 className="text-2xl font-semibold my-4 text-white">1,234</h1>
+      <h1 className="text-2xl font-semibold my-4 text-white">{count}</h1>
       <h2 className="capitalize text-sm font-medium text-gray-100">{type}s</h2>
     </div>
   );
