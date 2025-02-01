@@ -25,15 +25,6 @@ export function AttendanceChart({
 }: {
   chartData: { day: string; present: number; absent: number }[];
 }) {
-  // const chartData: AttendanceDataProp[] = [
-  //   { day: "Monday", present: 186, absent: 80 },
-  //   { day: "Tuesday", present: 305, absent: 200 },
-  //   { day: "Wednesday", present: 237, absent: 120 },
-  //   { day: "Thursday", present: 73, absent: 190 },
-  //   { day: "Friday", present: 209, absent: 130 },
-  //   { day: "Saturday", present: 214, absent: 140 },
-  // ];
-
   const chartConfig = {
     present: {
       label: "present",

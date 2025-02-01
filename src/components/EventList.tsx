@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getUserID } from "@/lib/role";
 
 export default async function EventList({
   dateParam,
@@ -7,12 +8,23 @@ export default async function EventList({
 }) {
   const date = dateParam ? new Date(dateParam) : new Date();
 
+  const currentUserId = await getUserID();
+
+  const stdClass = await prisma.class.findFirst({
+    where: { students: { some: { id: currentUserId! } } },
+  });
+
   const eventData = await prisma.event.findMany({
     where: {
-      startTime: {
-        gte: new Date(date.setHours(0, 0, 0, 0)),
-        lte: new Date(date.setHours(23, 59, 59, 999)),
-      },
+      AND: [
+        { class: { id: stdClass?.id } },
+        {
+          startTime: {
+            gte: new Date(date.setHours(0, 0, 0, 0)),
+            lte: new Date(date.setHours(23, 59, 59, 999)),
+          },
+        },
+      ],
     },
   });
 
